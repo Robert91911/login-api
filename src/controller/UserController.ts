@@ -24,7 +24,7 @@ export class UserController {
             res.send(user);
         }
         catch(e) {
-            res.status(404).json({message: 'No result'});
+            res.status(404).json({message: 'Not result'});
         }
     }
 
@@ -46,6 +46,7 @@ export class UserController {
 
         const userRepository = getRepository(User);
         try{
+            user.hashPassword();
             await userRepository.save(user);
         }
         catch(e) {
