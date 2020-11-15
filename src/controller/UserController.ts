@@ -1,12 +1,12 @@
 import {getRepository} from "typeorm";
 import {NextFunction, Request, Response} from "express";
-import {User} from "../entity/User";
+import {Users} from "../entity/Users";
 import {validate} from 'class-validator';
 
 export class UserController {
 
     static getAll = async (req: Request, res:Response) => {
-        const userRepository = getRepository(User);
+        const userRepository = getRepository(Users);
         const users = await userRepository.find();
 
         if (users.length > 0) {
@@ -18,7 +18,7 @@ export class UserController {
 
     static getById = async (req: Request, res: Response) => {
         const {id} = req.params;
-        const userRepository = getRepository(User);
+        const userRepository = getRepository(Users);
         try{
             const user = await userRepository.findOneOrFail(id);
             res.send(user);
@@ -30,21 +30,22 @@ export class UserController {
 
     static newUser = async (req: Request, res: Response) => {
         const {username, password, role} = req.body;
-        const user = new User();
+        const user = new Users();
 
         user.username = username;
         user.password = password;
         user.role = role;
 
         //Validate
-        const errors = await validate(user);
+        const validationOpt = { validationError: { target: false, value: false }};
+        const errors = await validate( user, validationOpt );
         if(errors.length > 0) {
             return res.status(400).json(errors)
         }
 
         //TODO: HASH PASSWORD
 
-        const userRepository = getRepository(User);
+        const userRepository = getRepository(Users);
         try{
             user.hashPassword();
             await userRepository.save(user);
@@ -61,7 +62,7 @@ export class UserController {
         const {id} = req.params;
         const {username, role} = req.body;
 
-        const userRepository = getRepository(User);
+        const userRepository = getRepository(Users);
         //Try get user
         try {
             user = await userRepository.findOneOrFail(id);
@@ -73,9 +74,11 @@ export class UserController {
         user.username = username;
         user.role = role;
 
-        const erros = await validate(user);
-        if(erros.length > 0) {
-            return res.status(400).json(erros);
+        const validationOpt = { validationError: { target: false, value: false }};
+        const errors = await validate( user, validationOpt );
+
+        if(errors.length > 0) {
+            return res.status(400).json(errors);
         }
 
         // Try to save user
@@ -91,8 +94,8 @@ export class UserController {
 
     static deleteUser = async (req: Request, res: Response) => {
         const {id} = req.params;
-        const userRepository = getRepository(User);
-        let user:User;
+        const userRepository = getRepository(Users);
+        let user:Users;
 
         try {
             user = await userRepository.findOneOrFail(id);
